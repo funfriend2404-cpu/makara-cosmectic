@@ -148,7 +148,7 @@ function saveKey(key, value) {
   catch (e) { alert("Could not save — your browser storage may be full."); }
 }
 
-// ---------- cloud sync (Netlify Function + Netlify Blobs) ----------
+// ---------- cloud sync (Netlify Function + Netlify Database) ----------
 // Every device that opens this site talks to the same tiny API below,
 // so products and sales stay in sync across devices automatically.
 const CLOUD_API = "/.netlify/functions/data";
