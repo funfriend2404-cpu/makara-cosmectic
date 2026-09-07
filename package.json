@@ -2,8 +2,12 @@
   "name": "makara-cosmectic-pos",
   "version": "1.0.0",
   "private": true,
-  "description": "Cloud-synced cosmetics POS, built as a single static page plus one Netlify Function backed by Netlify Blobs.",
+  "description": "Cloud-synced cosmetics POS, built as a single static page plus one Netlify Function backed by Netlify Database.",
   "dependencies": {
-    "@netlify/blobs": "^8.1.0"
+    "@netlify/database": "^2.0.1",
+    "drizzle-orm": "^1.0.0-beta.22"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^1.0.0-beta.22"
   }
 }
