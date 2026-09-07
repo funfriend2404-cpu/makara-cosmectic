@@ -14,16 +14,10 @@ A complete, self-contained package:
 
 ## If you see a "Netlify Blobs" error
 
-If the sync dot stays orange, or `/.netlify/functions/data` returns a 500 error mentioning **"the environment has not been configured to use Netlify Blobs"**, do this:
+`netlify/functions/data.mjs` is written using the modern Netlify Functions format, which receives access to Netlify Blobs automatically on every deploy — no manual setup or access tokens required. If you still see a **"the environment has not been configured to use Netlify Blobs"** error, it usually means the site has never had a successful deploy yet:
 
-1. In the Netlify dashboard, click your avatar (top right) → **User settings → Applications → New access token**. Copy the token.
-2. Go to **Site configuration → General → Site details** and copy the **Site ID**.
-3. Go to **Site configuration → Environment variables** and add:
-   - `BLOBS_SITE_ID` = (the Site ID from step 2)
-   - `BLOBS_AUTH_TOKEN` = (the token from step 1)
-4. Trigger a new deploy (**Deploys → Trigger deploy → Deploy site**).
-
-The function automatically uses these two variables if they're present, which fixes this error regardless of the underlying cause. If they're not set, it falls back to Netlify's normal automatic configuration.
+1. Go to **Deploys → Trigger deploy → Deploy site** and wait for it to finish.
+2. Reload the app and check the sync dot again.
 
 ## Verifying it works
 
