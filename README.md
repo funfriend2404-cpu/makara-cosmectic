@@ -3,7 +3,7 @@
 A complete, self-contained package:
 
 - `index.html` — the whole POS app (loaded from a CDN, no build tools needed to edit it)
-- `netlify/functions/data.js` — one serverless function that stores your products and sales in Netlify Blobs, shared across every device
+- `netlify/functions/data.mjs` — one serverless function that stores your products and sales in Netlify Blobs, shared across every device
 - `netlify.toml` / `package.json` — deploy configuration
 
 ## Deploying
@@ -12,18 +12,7 @@ A complete, self-contained package:
 2. In Netlify: **Add new project → Import an existing project → GitHub** → select the repo.
 3. Leave build settings as detected. Click **Deploy**.
 
-## If you see a "Netlify Blobs" error
-
-If the sync dot stays orange, or `/.netlify/functions/data` returns a 500 error mentioning **"the environment has not been configured to use Netlify Blobs"**, do this:
-
-1. In the Netlify dashboard, click your avatar (top right) → **User settings → Applications → New access token**. Copy the token.
-2. Go to **Site configuration → General → Site details** and copy the **Site ID**.
-3. Go to **Site configuration → Environment variables** and add:
-   - `BLOBS_SITE_ID` = (the Site ID from step 2)
-   - `BLOBS_AUTH_TOKEN` = (the token from step 1)
-4. Trigger a new deploy (**Deploys → Trigger deploy → Deploy site**).
-
-The function automatically uses these two variables if they're present, which fixes this error regardless of the underlying cause. If they're not set, it falls back to Netlify's normal automatic configuration.
+Netlify Blobs needs no setup or environment variables — it works automatically once the site is deployed.
 
 ## Verifying it works
 
