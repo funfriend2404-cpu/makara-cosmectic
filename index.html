@@ -7,18 +7,44 @@
 <link rel="icon" href="data:,">
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
   body { margin:0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; }
   .tabular-nums { font-variant-numeric: tabular-nums; }
   .line-clamp-2 { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+
+  /* App component styles — static, moved here (out of the React render
+     tree) so they're parsed once at page load instead of being
+     re-injected as a DOM node on every re-render. */
+  .pos-input { border:1px solid #F5D9E0; border-radius:10px; padding:7px 10px; font-size:13.5px; color:#2B211D; background:#fff; outline:none; transition: border-color .15s ease, box-shadow .15s ease; }
+  .pos-input:focus { border-color:#FFB6C1; box-shadow: 0 0 0 3px rgba(255,182,193,0.25); }
+  .pos-input-search { padding-left: 34px; }
+
+  .pos-btn-primary { background:#FFB6C1; color:#2B211D; font-size:13.5px; font-weight:600; padding:7px 14px; border-radius:10px; transition: opacity .15s ease, transform .08s ease; }
+  .pos-btn-primary:hover { opacity:0.9; }
+  .pos-btn-primary:active { transform: scale(0.96); }
+
+  .pos-btn-ghost { font-size:13.5px; font-weight:500; padding:7px 14px; border-radius:10px; color:#8A7A73; transition: background-color .15s ease, transform .08s ease; }
+  .pos-btn-ghost:hover { background:#FFF8F9; }
+  .pos-btn-ghost:active { transform: scale(0.96); }
+
+  .pos-product-card { background:#fff; border:1px solid #F5D9E0; border-radius:14px; padding:10px; transition:transform .12s ease, box-shadow .12s ease, border-color .12s ease; }
+  .pos-product-card:not(:disabled):hover { border-color:#C2708A; box-shadow:0 4px 14px rgba(194,112,138,0.18); transform:translateY(-1px); }
+  .pos-product-card:not(:disabled):active { transform: translateY(0) scale(0.98); box-shadow:0 2px 8px rgba(194,112,138,0.15); }
+
+  .pos-stepper { width:22px; height:22px; border-radius:999px; display:flex; align-items:center; justify-content:center; border:1.5px solid #C2708A; color:#C2708A; background:#fff; transition: background-color .12s ease, transform .08s ease; }
+  .pos-stepper:disabled { opacity:0.35; }
+  .pos-stepper:not(:disabled):hover { background:#FFE9EE; }
+  .pos-stepper:not(:disabled):active { transform: scale(0.88); }
+
+  .pos-nav-btn { transition: background-color .15s ease, color .15s ease, transform .08s ease; }
+  .pos-nav-btn:active { transform: scale(0.95); }
 </style>
 </head>
 <body>
 <div id="root"></div>
 
-<script type="text/babel" data-presets="react">
+<script>
 const { useState, useEffect, useMemo, useRef } = React;
 const h = React.createElement;
 
@@ -330,7 +356,7 @@ function InventoryPage({ products, onAdd, onEdit, onDelete }) {
       h("div", { className: "flex items-center gap-2" },
         h("div", { className: "relative flex-1 sm:flex-none" },
           h("span", { className: "absolute left-3 top-1/2 -translate-y-1/2" }, h(IconSearch, { size: 13 })),
-          h("input", { value: query, onChange: (e) => setQuery(e.target.value), placeholder: t("searchNameSku"), className: inputCls + " pl-8 w-full sm:w-56" })),
+          h("input", { value: query, onChange: (e) => setQuery(e.target.value), placeholder: t("searchNameSku"), className: inputCls + " pos-input-search w-full sm:w-56" })),
         h("button", { onClick: () => setModal("new"), className: "pos-btn-primary flex items-center gap-1.5 shrink-0" }, h(IconPlus, { size: 14 }), h("span", { className: "hidden xs:inline sm:inline" }, t("addProduct"))))),
     types.length > 0 ? h("div", { className: "px-4 sm:px-6 pb-4 -mt-1" },
       h("select", { value: typeFilter, onChange: (e) => setTypeFilter(e.target.value), className: inputCls + " w-full sm:w-56" },
@@ -487,7 +513,7 @@ function SalesPage({ products, cart, setCart, onCheckout, onAddProduct }) {
         h("div", { className: "flex items-center gap-2" },
           h("div", { className: "relative flex-1" },
             h("span", { className: "absolute left-3 top-1/2 -translate-y-1/2" }, h(IconSearch, { size: 13 })),
-            h("input", { value: query, onChange: (e) => setQuery(e.target.value), placeholder: t("searchProducts"), className: inputCls + " pl-8 w-full max-w-sm" })),
+            h("input", { value: query, onChange: (e) => setQuery(e.target.value), placeholder: t("searchProducts"), className: inputCls + " pos-input-search w-full max-w-sm" })),
           h("button", { onClick: () => setQuickAdd(true), className: "md:hidden p-2.5 rounded-lg shrink-0", style: { background: C.roseTint, color: C.roseDeep } }, h(IconPlus, { size: 16 }))),
         types.length > 0 ? h("div", { className: "mt-2" },
           h("select", { value: typeFilter, onChange: (e) => setTypeFilter(e.target.value), className: inputCls + " w-full max-w-sm" },
@@ -809,19 +835,6 @@ function App() {
     className: "w-full flex flex-col",
     style: { background: C.bg, minHeight: "100vh" }
   },
-    h("style", null, `
-      .pos-input { border:1px solid ${C.border}; border-radius:10px; padding:7px 10px; font-size:13.5px; color:${C.ink}; background:#fff; outline:none; }
-      .pos-input:focus { border-color:${C.rose}; }
-      .pos-btn-primary { background:${C.rose}; color:${C.ink}; font-size:13.5px; font-weight:600; padding:7px 14px; border-radius:10px; }
-      .pos-btn-primary:hover { opacity:0.9; }
-      .pos-btn-ghost { font-size:13.5px; font-weight:500; padding:7px 14px; border-radius:10px; color:${C.inkDim}; }
-      .pos-btn-ghost:hover { background:${C.bg}; }
-      .pos-product-card { background:#fff; border:1px solid ${C.border}; border-radius:14px; padding:10px; transition:transform .12s ease, box-shadow .12s ease, border-color .12s ease; }
-      .pos-product-card:not(:disabled):hover { border-color:${C.rose}; box-shadow:0 4px 14px rgba(194,112,138,0.18); transform:translateY(-1px); }
-      .pos-stepper { width:22px; height:22px; border-radius:999px; display:flex; align-items:center; justify-content:center; border:1.5px solid ${C.roseDeep}; color:${C.roseDeep}; background:#fff; }
-      .pos-stepper:disabled { opacity:0.35; }
-      .pos-stepper:not(:disabled):hover { background:${C.roseTint}; }
-    `),
 
     // top navbar
     h("div", { className: "w-full flex items-center justify-between gap-2 sm:gap-3 px-3 sm:px-6 py-3 shrink-0", style: { background: C.rose } },
@@ -833,7 +846,7 @@ function App() {
           const active = page === n.id;
           return h("button", {
             key: n.id, onClick: () => setPage(n.id),
-            className: "flex items-center gap-1.5 px-2.5 sm:px-3.5 py-2 rounded-full text-xs sm:text-sm font-medium",
+            className: "pos-nav-btn flex items-center gap-1.5 px-2.5 sm:px-3.5 py-2 rounded-full text-xs sm:text-sm font-medium",
             style: { background: active ? "#fff" : "transparent", color: active ? C.roseDeep : C.ink }
           }, h(n.icon, { size: 15 }), h("span", { className: "hidden sm:inline" }, n.label));
         }),
@@ -843,11 +856,11 @@ function App() {
         h("span", {
           title: cloudStatus === "online" ? "Synced to cloud" : cloudStatus === "syncing" ? "Syncing…" : "Offline — saved on this device only",
           className: "w-2 h-2 rounded-full shrink-0",
-          style: { background: cloudStatus === "online" ? C.sage : cloudStatus === "syncing" ? "#D9B86A" : C.warn }
+          style: { background: cloudStatus === "online" ? C.sage : cloudStatus === "syncing" ? "#D9B86A" : C.warn, transition: "background-color .3s ease" }
         }),
         h("button", {
           onClick: () => setSettingsOpen(true),
-          className: "flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full",
+          className: "pos-nav-btn flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full",
           style: { color: C.ink }, title: t("settings")
         }, h(IconSettings, { size: 17 }))
       )
