@@ -59,6 +59,13 @@ const STRINGS = {
     settingsDataNote: "Inventory and sales data are saved to the cloud and shared across every device that opens this site. Back up regularly as an extra safety net.",
     exportBackup: "Export backup", restoreBackup: "Restore backup",
     toastProductAdded: "Product added", toastProductUpdated: "Product updated", toastSaleCompleted: "Sale completed", toastBackupRestored: "Backup restored",
+    fieldType: "Type", typePlaceholder: "e.g. Skincare, Makeup", allTypes: "All types",
+    navSalesHistory: "Sales History", salesHistoryTitle: "Sales History",
+    noSalesHistoryTitle: "No sales yet", noSalesHistoryBody: "Completed sales will appear here, with the option to void a sale and restore inventory.",
+    voidBtn: "Void", voided: "Voided",
+    voidConfirmTitle: "Void this sale?", voidConfirmBody: "This restores the sold items back into inventory. The sale stays on record for audit purposes.",
+    toastSaleVoided: "Sale voided",
+    stockCost: "Stock Cost", totalStockValue: "Total Stock Value",
   },
   km: {
     navSales: "លក់", navInventory: "ស្តុកទំនិញ", navReports: "របាយការណ៍", settings: "ការកំណត់",
@@ -86,6 +93,13 @@ const STRINGS = {
     settingsDataNote: "ទិន្នន័យស្តុក និងការលក់ត្រូវបានរក្សាទុកនៅលើប្រព័ន្ធអនឡាញ ហើយចែករំលែករវាងគ្រប់ឧបករណ៍ដែលបើកគេហទំព័រនេះ។ សូមបម្រុងទុកជាទៀងទាត់ ដើម្បីសុវត្ថិភាពបន្ថែម។",
     exportBackup: "នាំចេញទិន្នន័យបម្រុង", restoreBackup: "ស្តារទិន្នន័យបម្រុង",
     toastProductAdded: "បានបន្ថែមទំនិញ", toastProductUpdated: "បានធ្វើបច្ចុប្បន្នភាពទំនិញ", toastSaleCompleted: "ការលក់បានបញ្ចប់", toastBackupRestored: "ទិន្នន័យបម្រុងត្រូវបានស្តារ",
+    fieldType: "ប្រភេទ", typePlaceholder: "ឧ. ការថែស្បែក, គ្រឿងសម្អាង", allTypes: "គ្រប់ប្រភេទ",
+    navSalesHistory: "ប្រវត្តិការលក់", salesHistoryTitle: "ប្រវត្តិការលក់",
+    noSalesHistoryTitle: "មិនទាន់មានការលក់", noSalesHistoryBody: "ការលក់ដែលបានបញ្ចប់ នឹងបង្ហាញនៅទីនេះ ដោយអាចលុបចោល និងស្តារស្តុកមកវិញ។",
+    voidBtn: "លុបចោល", voided: "បានលុបចោល",
+    voidConfirmTitle: "លុបចោលការលក់នេះ?", voidConfirmBody: "វានឹងស្តារទំនិញដែលបានលក់មកក្នុងស្តុកវិញ។ កំណត់ត្រានៃការលក់នៅតែរក្សាទុកសម្រាប់ការត្រួតពិនិត្យ។",
+    toastSaleVoided: "ការលក់ត្រូវបានលុបចោល",
+    stockCost: "ថ្លៃដើមស្តុក", totalStockValue: "តម្លៃស្តុកសរុប",
   },
 };
 const LangContext = React.createContext("en");
@@ -191,6 +205,7 @@ const IconPercent = (p) => h(Icon, p, "%");
 const IconDollar = (p) => h(Icon, p, "$");
 const IconSettings = (p) => h(Icon, p, "\u2699");
 const IconBack = (p) => h(Icon, p, "\u2039");
+const IconReceipt = (p) => h(Icon, p, "\ud83e\uddfe");
 
 // ---------- small atoms ----------
 function Toast({ message }) {
@@ -224,6 +239,7 @@ function ProductModal({ initial, onClose, onSave }) {
   const t = useT();
   const [name, setName] = useState(initial ? initial.name : "");
   const [sku, setSku] = useState(initial ? initial.sku : "");
+  const [type, setType] = useState(initial ? initial.type || "" : "");
   const [qty, setQty] = useState(initial ? initial.qty : 0);
   const [cost, setCost] = useState(initial ? initial.cost : "");
   const [price, setPrice] = useState(initial ? initial.price : "");
@@ -246,6 +262,7 @@ function ProductModal({ initial, onClose, onSave }) {
       id: initial ? initial.id : uid(),
       name: name.trim(),
       sku: sku.trim() || "SKU-" + uid().slice(-6).toUpperCase(),
+      type: type.trim(),
       qty: clampQty(qty), cost: Number(cost) || 0, price: Number(price) || 0, photo,
     });
   };
@@ -276,6 +293,7 @@ function ProductModal({ initial, onClose, onSave }) {
           h("input", { ref: fileRef, type: "file", accept: "image/*", className: "hidden", onChange: handleFile })),
         h(Field, { label: t("fieldName") }, h("input", { className: inputCls, value: name, onChange: (e) => setName(e.target.value), placeholder: t("namePlaceholder") })),
         h(Field, { label: t("fieldSku") }, h("input", { className: inputCls, value: sku, onChange: (e) => setSku(e.target.value), placeholder: t("skuPlaceholder") })),
+        h(Field, { label: t("fieldType") }, h("input", { className: inputCls, value: type, onChange: (e) => setType(e.target.value), placeholder: t("typePlaceholder") })),
         h("div", { className: "grid grid-cols-3 gap-3" },
           h(Field, { label: t("fieldQty") }, h("input", { type: "number", min: "0", step: "1", className: inputCls, value: qty, onChange: (e) => setQty(e.target.value) })),
           h(Field, { label: t("fieldCost") }, h("input", { type: "number", min: "0", step: "0.01", className: inputCls, value: cost, onChange: (e) => setCost(e.target.value), placeholder: "0.00" })),
@@ -295,9 +313,11 @@ function ProductModal({ initial, onClose, onSave }) {
 function InventoryPage({ products, onAdd, onEdit, onDelete }) {
   const t = useT();
   const [query, setQuery] = useState("");
+  const [typeFilter, setTypeFilter] = useState("");
   const [modal, setModal] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
-  const filtered = products.filter(p => p.name.toLowerCase().includes(query.toLowerCase()) || p.sku.toLowerCase().includes(query.toLowerCase()));
+  const types = useMemo(() => Array.from(new Set(products.map(p => (p.type || "").trim()).filter(Boolean))).sort(), [products]);
+  const filtered = products.filter(p => (p.name.toLowerCase().includes(query.toLowerCase()) || p.sku.toLowerCase().includes(query.toLowerCase())) && (typeFilter === "" || (p.type || "") === typeFilter));
 
   return h("div", { className: "flex flex-col h-full" },
     h("div", { className: "flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 sm:px-6 pt-4 sm:pt-6 pb-4" },
@@ -308,6 +328,9 @@ function InventoryPage({ products, onAdd, onEdit, onDelete }) {
         h("div", { className: "relative flex-1 sm:flex-none" },
           h("span", { className: "absolute left-3 top-1/2 -translate-y-1/2" }, h(IconSearch, { size: 13 })),
           h("input", { value: query, onChange: (e) => setQuery(e.target.value), placeholder: t("searchNameSku"), className: inputCls + " pl-8 w-full sm:w-56" })),
+        types.length > 0 ? h("select", { value: typeFilter, onChange: (e) => setTypeFilter(e.target.value), className: inputCls },
+          h("option", { value: "" }, t("allTypes")),
+          types.map(ty => h("option", { key: ty, value: ty }, ty))) : null,
         h("button", { onClick: () => setModal("new"), className: "pos-btn-primary flex items-center gap-1.5 shrink-0" }, h(IconPlus, { size: 14 }), h("span", { className: "hidden xs:inline sm:inline" }, t("addProduct"))))),
     h("div", { className: "flex-1 overflow-y-auto px-4 sm:px-6 pb-6" },
       products.length === 0 ? h(EmptyState, {
@@ -416,11 +439,13 @@ function CartContents({ cart, changeQty, removeItem, discountType, setDiscountTy
 function SalesPage({ products, cart, setCart, onCheckout, onAddProduct }) {
   const t = useT();
   const [query, setQuery] = useState("");
+  const [typeFilter, setTypeFilter] = useState("");
   const [discountType, setDiscountType] = useState("percent");
   const [discountValue, setDiscountValue] = useState(0);
   const [cartOpen, setCartOpen] = useState(false);
   const [quickAdd, setQuickAdd] = useState(false);
-  const filtered = products.filter(p => p.name.toLowerCase().includes(query.toLowerCase()));
+  const types = useMemo(() => Array.from(new Set(products.map(p => (p.type || "").trim()).filter(Boolean))).sort(), [products]);
+  const filtered = products.filter(p => p.name.toLowerCase().includes(query.toLowerCase()) && (typeFilter === "" || (p.type || "") === typeFilter));
 
   const addToCart = (p) => {
     if (p.qty <= 0) return;
@@ -456,6 +481,9 @@ function SalesPage({ products, cart, setCart, onCheckout, onAddProduct }) {
           h("div", { className: "relative flex-1" },
             h("span", { className: "absolute left-3 top-1/2 -translate-y-1/2" }, h(IconSearch, { size: 13 })),
             h("input", { value: query, onChange: (e) => setQuery(e.target.value), placeholder: t("searchProducts"), className: inputCls + " pl-8 w-full max-w-sm" })),
+          types.length > 0 ? h("select", { value: typeFilter, onChange: (e) => setTypeFilter(e.target.value), className: inputCls + " shrink-0" },
+            h("option", { value: "" }, t("allTypes")),
+            types.map(ty => h("option", { key: ty, value: ty }, ty))) : null,
           h("button", { onClick: () => setQuickAdd(true), className: "md:hidden p-2.5 rounded-lg shrink-0", style: { background: C.roseTint, color: C.roseDeep } }, h(IconPlus, { size: 16 })))),
       h("div", { className: "flex-1 overflow-y-auto px-4 sm:px-6", style: { paddingBottom: cart.length > 0 ? "5.5rem" : "1.5rem" } },
         products.length === 0 ? h(EmptyState, { icon: IconCart, title: t("nothingToSellTitle"), body: t("nothingToSellBody") })
@@ -508,12 +536,15 @@ function SalesPage({ products, cart, setCart, onCheckout, onAddProduct }) {
 }
 
 // ---------- Reports page ----------
-function ReportsPage({ sales }) {
+function ReportsPage({ sales, products }) {
   const t = useT();
   const [period, setPeriod] = useState("day");
+  const activeSales = useMemo(() => sales.filter(s => !s.voided), [sales]);
+  const stockCost = useMemo(() => products.reduce((s, p) => s + (Number(p.qty) || 0) * (Number(p.cost) || 0), 0), [products]);
+  const totalStockValue = useMemo(() => products.reduce((s, p) => s + (Number(p.qty) || 0) * (Number(p.price) || 0), 0), [products]);
   const grouped = useMemo(() => {
     const map = new Map();
-    for (const sale of sales) {
+    for (const sale of activeSales) {
       const key = PERIOD_FN[period](sale.timestamp);
       if (!map.has(key)) map.set(key, { key, revenue: 0, cost: 0, itemsSold: 0, transactions: 0, latestTs: sale.timestamp });
       const b = map.get(key);
@@ -528,7 +559,7 @@ function ReportsPage({ sales }) {
 
   const topProducts = useMemo(() => {
     const map = new Map();
-    for (const sale of sales) for (const it of sale.items) {
+    for (const sale of activeSales) for (const it of sale.items) {
       if (!map.has(it.productId)) map.set(it.productId, { name: it.name, qty: 0, revenue: 0 });
       const e = map.get(it.productId); e.qty += it.qty; e.revenue += it.qty * it.price;
     }
@@ -544,7 +575,10 @@ function ReportsPage({ sales }) {
       h("div", { className: "flex rounded-lg overflow-hidden", style: { border: `1px solid ${C.border}` } },
         ["day", "week", "month"].map(p => h("button", { key: p, onClick: () => setPeriod(p), className: "px-3.5 py-1.5 text-sm font-medium", style: { background: period === p ? C.rose : "transparent", color: period === p ? C.ink : C.inkDim } }, periodLabels[p])))),
     h("div", { className: "flex-1 overflow-y-auto px-6 pb-6" },
-      sales.length === 0 ? h(EmptyState, { icon: IconChart, title: t("noSalesTitle"), body: t("noSalesBody") })
+      h("div", { className: "grid grid-cols-2 gap-3 mb-5" },
+        h(StatCard, { label: t("stockCost"), value: money(stockCost), color: C.warn }),
+        h(StatCard, { label: t("totalStockValue"), value: money(totalStockValue), color: C.sage })),
+      activeSales.length === 0 ? h(EmptyState, { icon: IconChart, title: t("noSalesTitle"), body: t("noSalesBody") })
       : h(React.Fragment, null,
           h("div", { className: "grid grid-cols-3 gap-3 mb-5" },
             h(StatCard, { label: t("totalRevenue"), value: money(totals.revenue), color: C.roseDeep }),
@@ -586,6 +620,52 @@ function StatCard({ label, value, color }) {
   return h("div", { className: "rounded-xl p-4", style: { background: C.panel, border: `1px solid ${C.border}` } },
     h("div", { className: "text-xs font-medium mb-1", style: { color: C.inkDim } }, label),
     h("div", { className: "text-xl font-semibold tabular-nums", style: { color } }, value));
+}
+
+// ---------- Sales history page (with void) ----------
+function SalesHistoryPage({ sales, onVoid }) {
+  const t = useT();
+  const [confirmVoid, setConfirmVoid] = useState(null);
+  const sorted = useMemo(() => [...sales].sort((a, b) => b.timestamp - a.timestamp), [sales]);
+
+  return h("div", { className: "flex flex-col h-full" },
+    h("div", { className: "px-4 sm:px-6 pt-4 sm:pt-6 pb-4" },
+      h("h1", { className: "text-xl font-semibold", style: { color: C.ink } }, t("salesHistoryTitle"))),
+    h("div", { className: "flex-1 overflow-y-auto px-4 sm:px-6 pb-6" },
+      sorted.length === 0 ? h(EmptyState, { icon: IconReceipt, title: t("noSalesHistoryTitle"), body: t("noSalesHistoryBody") })
+      : h("div", { className: "space-y-3" }, sorted.map(sale => {
+          const itemsLabel = sale.items.map(it => `${it.name} ×${it.qty}`).join(", ");
+          return h("div", {
+            key: sale.id,
+            className: "rounded-xl p-4 flex items-start justify-between gap-3",
+            style: { background: sale.voided ? C.bg : C.panel, border: `1px solid ${C.border}`, opacity: sale.voided ? 0.6 : 1 }
+          },
+            h("div", { className: "min-w-0 flex-1" },
+              h("div", { className: "text-sm font-medium", style: { color: C.ink } }, new Date(sale.timestamp).toLocaleString()),
+              h("div", { className: "text-xs mt-1", style: { color: C.inkDim } }, itemsLabel),
+              h("div", { className: "text-sm font-semibold tabular-nums mt-1", style: { color: C.roseDeep } }, money(sale.total))),
+            sale.voided
+              ? h("span", { className: "text-xs px-2 py-1 rounded font-medium shrink-0", style: { background: C.warnTint, color: C.warn } }, t("voided"))
+              : h("button", { onClick: () => setConfirmVoid(sale), className: "pos-btn-ghost shrink-0", style: { border: `1px solid ${C.border}`, color: C.warn } }, t("voidBtn")));
+        }))),
+    confirmVoid ? h("div", {
+      className: "fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4",
+      style: { background: "rgba(43,33,29,0.45)" }, onClick: () => setConfirmVoid(null)
+    },
+      h("div", {
+        className: "w-full max-w-sm md:rounded-2xl rounded-t-2xl shadow-xl p-5",
+        style: { background: C.panel, paddingBottom: "calc(1.25rem + env(safe-area-inset-bottom))" },
+        onClick: (e) => e.stopPropagation()
+      },
+        h("h3", { className: "font-semibold mb-1", style: { color: C.ink } }, t("voidConfirmTitle")),
+        h("p", { className: "text-sm mb-4", style: { color: C.inkDim } }, t("voidConfirmBody")),
+        h("div", { className: "flex justify-end gap-2" },
+          h("button", { onClick: () => setConfirmVoid(null), className: "pos-btn-ghost" }, t("cancel")),
+          h("button", {
+            onClick: () => { onVoid(confirmVoid.id); setConfirmVoid(null); },
+            className: "pos-btn-primary", style: { background: C.warn, color: "#fff" }
+          }, t("voidBtn"))))) : null
+  );
 }
 
 // ---------- Settings sheet (backup controls) ----------
@@ -671,12 +751,26 @@ function App() {
   const deleteProduct = (id) => { const next = products.filter(x => x.id !== id); setProducts(next); persist(next, sales); setCart(c => c.filter(x => x.id !== id)); };
 
   const handleCheckout = ({ cart: items, subtotal, discountAmount, total }) => {
-    const sale = { id: uid(), timestamp: Date.now(), items: items.map(i => ({ productId: i.id, name: i.name, qty: i.qty, price: i.price, cost: i.cost })), subtotal, discountAmount, total };
+    const sale = { id: uid(), timestamp: Date.now(), items: items.map(i => ({ productId: i.id, name: i.name, qty: i.qty, price: i.price, cost: i.cost })), subtotal, discountAmount, total, voided: false };
     const nextSales = [...sales, sale]; setSales(nextSales);
     const nextProducts = products.map(p => { const bought = items.find(i => i.id === p.id); return bought ? { ...p, qty: Math.max(0, p.qty - bought.qty) } : p; });
     setProducts(nextProducts);
     persist(nextProducts, nextSales);
     showToast(t("toastSaleCompleted"));
+  };
+
+  const voidSale = (saleId) => {
+    const sale = sales.find(s => s.id === saleId);
+    if (!sale || sale.voided) return;
+    const nextSales = sales.map(s => s.id === saleId ? { ...s, voided: true } : s);
+    const nextProducts = products.map(p => {
+      const restored = sale.items.find(i => i.productId === p.id);
+      return restored ? { ...p, qty: p.qty + restored.qty } : p;
+    });
+    setSales(nextSales);
+    setProducts(nextProducts);
+    persist(nextProducts, nextSales);
+    showToast(t("toastSaleVoided"));
   };
 
   const handleImport = (data) => {
@@ -688,6 +782,7 @@ function App() {
   const NAV = [
     { id: "sales", label: t("navSales"), icon: IconCart },
     { id: "inventory", label: t("navInventory"), icon: IconBox },
+    { id: "salesHistory", label: t("navSalesHistory"), icon: IconReceipt },
     { id: "reports", label: t("navReports"), icon: IconChart },
   ];
 
@@ -743,7 +838,8 @@ function App() {
     h("div", { className: "flex-1 min-w-0" },
       page === "inventory" ? h(InventoryPage, { products, onAdd: addProduct, onEdit: editProduct, onDelete: deleteProduct }) : null,
       page === "sales" ? h(SalesPage, { products, cart, setCart, onCheckout: handleCheckout, onAddProduct: addProduct }) : null,
-      page === "reports" ? h(ReportsPage, { sales }) : null),
+      page === "salesHistory" ? h(SalesHistoryPage, { sales, onVoid: voidSale }) : null,
+      page === "reports" ? h(ReportsPage, { sales, products }) : null),
     settingsOpen ? h(SettingsSheet, { products, sales, onImport: handleImport, onClose: () => setSettingsOpen(false) }) : null,
     h(Toast, { message: toast })
   ));
